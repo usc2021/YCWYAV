@@ -2,7 +2,7 @@
 
 This is only the model part, which needs to create input to run it. 
 Our input was 3D medical data and output was the probability of grade for meningioma patients.
-Desribe of our model.
+Describe of our model.
 
 3D asymmetric CNN architecture with two encoding paths was built to capture the image features based on the two MR sequences (T1-CE and T2-FLAIR). 
 Each path had the same 3×3×3 kernel with a different number of filters to control the special feature of each sequence. 
