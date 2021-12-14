@@ -1,6 +1,6 @@
 
 
-The resampling voxel spacing is 0.5×0.5×1.25 mm. 
+###The resampling voxel spacing is 0.5×0.5×1.25 mm. 
 
 
 from functools import partial
@@ -14,8 +14,6 @@ from keras.layers import Lambda
 from net import create_convolution_block
 from net import create_convolution_block_one
 from net import create_convolution_block_two
-from metrics import weighted_dice_coefficient_loss
-
 
 from keras.utils import multi_gpu_model
 import tensorflow as tf
@@ -24,7 +22,7 @@ from keras.utils import multi_gpu_model
 import keras
 keras.backend.set_image_data_format('channels_first')
 
-#create_convolution_block = partial(create_convolution_block, activation=LeakyReLU, instance_normalization=True)
+
 create_convolution_block = partial(create_convolution_block, activation=LeakyReLU)
 
 
