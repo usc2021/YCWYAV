@@ -1,3 +1,120 @@
 
 
 The resampling voxel spacing is 0.5×0.5×1.25 mm. 
+
+
+from functools import partial
+
+from keras.layers import Input, LeakyReLU, Add, UpSampling3D, Activation, SpatialDropout3D, Conv3D, concatenate
+from keras.layers import Flatten, Dense, Dropout
+from keras.engine import Model
+from keras.optimizers import Adam
+
+from keras.layers import Lambda
+from net import create_convolution_block
+from net import create_convolution_block_one
+from net import create_convolution_block_two
+from metrics import weighted_dice_coefficient_loss
+
+
+from keras.utils import multi_gpu_model
+import tensorflow as tf
+import numpy as np
+from keras.utils import multi_gpu_model
+import keras
+keras.backend.set_image_data_format('channels_first')
+
+#create_convolution_block = partial(create_convolution_block, activation=LeakyReLU, instance_normalization=True)
+create_convolution_block = partial(create_convolution_block, activation=LeakyReLU)
+
+
+
+def usc2021_model(input_shape=(1, 128, 128, 80), n_base_filters=20, depth=4, dropout_rate=0.3,
+                      n_segmentation_levels=1, n_labels=2, optimizer=Adam, initial_learning_rate=5e-4,
+                      loss_function='categorical_crossentropy', activation_name="sigmoid"):
+    
+    
+    
+    inputs = Input(input_shape)
+
+    current_layer_1 = Lambda(lambda x: x[:,0:1,:,:,:])(inputs)
+    current_layer_2 = Lambda(lambda x: x[:,1:2,:,:,:])(inputs)
+    level_output_layers_1 = list()
+    level_output_layers_2 = list()
+    level_filters = list()
+    for level_number in range(depth):
+        n_level_filters = (2**level_number) * n_base_filters
+        level_filters.append(n_level_filters)
+
+        if current_layer_1 is Lambda(lambda x: x[:,0:1,:,:,:])(inputs):
+        
+            in_conv_1 = create_convolution_block_one(current_layer_1, n_level_filters)
+            
+        else:
+            in_conv_1 = create_convolution_block_one(current_layer_1, n_level_filters, strides=(2, 2, 2))
+            
+            
+        if current_layer_2 is Lambda(lambda x: x[:,1:2,:,:,:])(inputs):
+       
+            in_conv_2 = create_convolution_block_two(current_layer_2, n_level_filters)
+        else:
+            in_conv_2 = create_convolution_block_two(current_layer_2, n_level_filters, strides=(2, 2, 2))
+            
+        context_output_layer_1 = create_context_module_one(in_conv_1, n_level_filters, dropout_rate=dropout_rate)
+        context_output_layer_2 = create_context_module_two(in_conv_2, n_level_filters, dropout_rate=dropout_rate)
+        summation_layer_1 = Add()([in_conv_1, context_output_layer_1])
+        
+        summation_layer_2 = Add()([in_conv_2, context_output_layer_2])
+        current_layer_1=summation_layer_1
+        current_layer_2=summation_layer_2
+
+        
+        current_layer = concatenate([current_layer_1,current_layer_2],axis=1)
+        
+    
+    
+    mid_f1=Flatten()(current_layer)
+    
+    
+    mid_2=Dense(1024,activation='sigmoid')(mid_f1)
+    mid_2=Dropout(0.3)(mid_2)
+    
+    mid_3=Dense(1024,activation='sigmoid')(mid_2)
+    mid_3=Dropout(0.3)(mid_3)
+    
+    mid_4=Dense(2, activation='sigmoid')(mid_3)
+    mid_4=Dropout(0.3)(mid_4)
+    
+    final_convolution=mid_4
+    activation_block = Activation(activation_name)(final_convolution)
+
+    
+    model = Model(inputs=inputs, outputs=activation_block)
+    pa_model=multi_gpu_model(model, gpus=4)
+    pa_model.compile(optimizer=optimizer(lr=initial_learning_rate), loss='categorical_crossentropy')
+    return pa_model
+
+
+
+
+def create_context_module_one(input_layer, n_level_filters, dropout_rate=0.3, data_format="channels_first"):
+    convolution1 = create_convolution_block_one(input_layer=input_layer, n_filters=n_level_filters)
+    dropout = SpatialDropout3D(rate=dropout_rate, data_format=data_format)(convolution1)
+    convolution21 = create_convolution_block_one(input_layer=dropout, n_filters=n_level_filters)
+    return convolution21
+
+
+def create_context_module_two(input_layer, n_level_filters, dropout_rate=0.3, data_format="channels_first"):
+    convolution1 = create_convolution_block_two(input_layer=input_layer, n_filters=n_level_filters)
+    dropout = SpatialDropout3D(rate=dropout_rate, data_format=data_format)(convolution1)
+    convolution22 = create_convolution_block_two(input_layer=dropout, n_filters=n_level_filters)
+    return convolution22
+
+def create_context_module(input_layer, n_level_filters, dropout_rate=0.3, data_format="channels_first"):
+    convolution1 = create_convolution_block(input_layer=input_layer, n_filters=n_level_filters)
+    dropout = SpatialDropout3D(rate=dropout_rate, data_format=data_format)(convolution1)
+    convolution33 = create_convolution_block(input_layer=dropout, n_filters=n_level_filters)
+    return convolution33
+
+
+
