@@ -1,0 +1,41 @@
+
+
+import numpy as np
+from keras import backend as K
+from keras.engine import Input, Model
+
+K.set_image_data_format("channels_first")
+
+def create_convolution_block(input_layer, n_filters, kernel=(3, 3, 3), activation=None,
+                             padding='same', strides=(1, 1, 1)):
+    
+    
+    layer = Conv3D(n_filters, kernel, padding=padding, strides=strides)(input_layer)
+   
+    if activation is None:
+        return Activation('relu')(layer)
+    else:
+        return activation()(layer)
+
+
+def create_convolution_block_one(input_layer, n_filters kernel=(3, 3, 3), activation=None,
+                             padding='same', strides=(1, 1, 1)):
+    
+    n_filters=np.int32(n_filters*6/20)
+    layer = Conv3D(n_filters, kernel, padding=padding, strides=strides)(input_layer)
+    if activation is None:
+        return Activation('relu')(layer)
+    else:
+        return activation()(layer)
+
+
+def create_convolution_block_two(input_layer, n_filters, activation=None,
+                             padding='same', strides=(1, 1, 1)):
+   
+    n_filters=np.int32(n_filters*20/20)
+    layer = Conv3D(n_filters, kernel, padding=padding, strides=strides)(input_layer)
+    if activation is None:
+        return Activation('relu')(layer)
+    else:
+        return activation()(layer)
+
