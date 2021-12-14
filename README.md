@@ -15,3 +15,5 @@ a dropout layer between the convolutions with a dropout rate of 0.3, and a 2Ã—2Ã
 The number of feature channels was doubled after the max-pooling operation. After feature extraction by 3D convolutional layers, 
 three fully connected layers were applied to map 3D features. Dropout layers with a rate of 0.3 were applied after each fully connected layer. 
 In the final step, the last fully connected layer was used to feed a softmax, which maps the feature vector to binary classes.
+
+<img width="1381" alt="Screen Shot 2021-12-14 at 9 53 16 AM" src="https://user-images.githubusercontent.com/96093712/146021899-57d88161-22f6-4337-8aa9-86b38205f86e.png">
