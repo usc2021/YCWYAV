@@ -18,7 +18,7 @@ def create_convolution_block(input_layer, n_filters, kernel=(3, 3, 3), activatio
         return activation()(layer)
 
 
-def create_convolution_block_one(input_layer, n_filters kernel=(3, 3, 3), activation=None,
+def create_convolution_block_one(input_layer, n_filters, kernel=(3, 3, 3), activation=None,
                              padding='same', strides=(1, 1, 1)):
     
     n_filters=np.int32(n_filters*2/20)
@@ -29,7 +29,7 @@ def create_convolution_block_one(input_layer, n_filters kernel=(3, 3, 3), activa
         return activation()(layer)
 
 
-def create_convolution_block_two(input_layer, n_filters, activation=None,
+def create_convolution_block_two(input_layer, n_filters, kernel=(3, 3, 3), activation=None,
                              padding='same', strides=(1, 1, 1)):
    
     n_filters=np.int32(n_filters*18/20)
