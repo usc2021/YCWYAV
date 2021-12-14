@@ -1,5 +1,7 @@
 # YCWYAV
 
+Automated Meningioma Grade Classification
+
 This is only the model part, which needs to create input to run it. 
 Our input was 4D medical data and output was the probability of grade for meningioma patients.
 Describe of our model.
